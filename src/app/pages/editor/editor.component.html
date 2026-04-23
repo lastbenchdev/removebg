@@ -1,0 +1,44 @@
+@if (job) {
+  <div class="container-fluid h-100 d-flex flex-column py-3">
+    <div class="row align-items-center mb-3">
+      <div class="col d-flex align-items-center gap-3">
+        <button class="btn btn-outline-light d-flex align-items-center rounded-circle p-2" (click)="closeEditor()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+        </button>
+        <h2 class="h5 mb-0 text-white">{{ job.originalFile.name }}</h2>
+      </div>
+    </div>
+    <div class="row flex-grow-1 overflow-hidden">
+      <!-- Left Panel: Main Visual Canvas -->
+      <div class="col-md-9 d-flex align-items-center justify-content-center bg-dark rounded shadow-sm position-relative p-3 h-100">
+        <canvas
+          #mainCanvas
+          class="img-fluid rounded shadow"
+          [ngStyle]="{'cursor': brushMode === 'erase' ? 'crosshair' : 'cell', 'touch-action': 'none', 'max-height': '100%', 'object-fit': 'contain'}"
+          (pointerdown)="onPointerDown($event)"
+          (pointermove)="onPointerMove($event)"
+          (pointerup)="onPointerUp()"
+          (pointercancel)="onPointerUp()"
+          (pointerleave)="onPointerUp()"
+        ></canvas>
+      </div>
+      <!-- Right Panel: Editor Controls Toolkit -->
+      <div class="col-md-3 h-100">
+        <app-editor-toolbar
+          [bgColor]="bgColor"
+          [brushSize]="brushSize"
+          [brushMode]="brushMode"
+          [hasCustomBg]="bgImage !== null"
+          (bgColorChange)="onBgColorChange($event)"
+          (bgImageChange)="onBgImageUpload($event)"
+          (brushModeChange)="onBrushModeChange($event)"
+          (brushSizeChange)="brushSize = $event"
+          (download)="onDownload()"
+        ></app-editor-toolbar>
+      </div>
+    </div>
+  </div>
+}

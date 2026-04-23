@@ -1,0 +1,47 @@
+<div class="container d-flex flex-column align-items-center mt-5">
+  <div class="text-center mb-5">
+    <h2 class="display-5 fw-bold text-white mb-3">Remove Image Backgrounds<br/><span class="text-primary">Locally & Privately</span></h2>
+    <p class="lead text-light">
+      100% Client-side. No images are sent to any server. Powered by ONNX Runtime Web.
+    </p>
+  </div>
+
+  @if (completedCount() > 0) {
+    <div class="d-flex justify-content-end w-100 mb-3">
+      <button class="btn btn-primary shadow-sm" (click)="downloadAllZip()">
+        Download All as ZIP ({{ completedCount() }})
+      </button>
+    </div>
+  }
+
+  @if (isProcessing()) {
+    <div class="card bg-dark text-white border-secondary w-100 mb-4 shadow">
+      <div class="card-body">
+        <div class="d-flex justify-content-between mb-2">
+          <span>Processing images...</span>
+          <span>{{ completedCount() }} / {{ totalCount() }} completed</span>
+        </div>
+        <div class="progress" style="height: 10px;">
+          <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+            role="progressbar"
+            [style.width.%]="(completedCount() / totalCount()) * 100">
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Upload Component handles folder and drag-and-drop -->
+  <div class="w-100 mb-4">
+    <app-upload (filesAdded)="onFilesAdded($event)"></app-upload>
+  </div>
+
+  <div class="w-100">
+    <app-queue
+      [jobs]="jobs()"
+      (clearCompleted)="onClearCompleted()"
+      (retryJob)="onRetryJob($event)"
+      (previewJob)="onPreviewJob($event)"
+    ></app-queue>
+  </div>
+</div>

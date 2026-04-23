@@ -1,0 +1,71 @@
+<div class="card bg-dark text-white border-secondary h-100 shadow rounded-0 rounded-end">
+  <div class="card-body d-flex flex-column gap-3 overflow-auto">
+    <h3 class="h6 text-uppercase fw-bold text-muted mb-1">Background</h3>
+
+    <div class="d-flex flex-column gap-2 mb-2">
+      <label class="form-label text-light mb-0 small">Color</label>
+      <div class="d-flex align-items-center gap-2 bg-secondary bg-opacity-25 p-2 rounded border border-secondary">
+        <input type="color" class="form-control form-control-color border-0 p-0 bg-transparent" [(ngModel)]="bgColor" (ngModelChange)="bgColorChange.emit($event)" title="Choose background color" style="width: 32px; height: 32px; cursor: pointer;">
+        <span class="font-monospace small">{{ bgColor }}</span>
+      </div>
+      @if (bgColor !== 'transparent') {
+        <button class="btn btn-sm btn-outline-danger w-100 mt-1" (click)="removeCustomColor()">
+          Remove Color
+        </button>
+      }
+    </div>
+
+    <div class="d-flex flex-column gap-2 mb-2">
+      <label class="form-label text-light mb-0 small">Custom Image</label>
+      <button class="btn btn-outline-light w-100" (click)="bgInput.click()">
+        Upload Background
+      </button>
+      <input #bgInput type="file" accept="image/*" class="d-none" (change)="onBgImageUpload($event)">
+
+      @if (hasCustomBg) {
+        <button class="btn btn-outline-danger w-100 mt-1" (click)="removeCustomBg()">
+          Remove Image
+        </button>
+      }
+    </div>
+
+    <hr class="border-secondary my-1">
+
+    <h3 class="h6 text-uppercase fw-bold text-muted mb-1">Refine Mask</h3>
+
+    <div class="btn-group w-100 mb-2" role="group">
+      <button class="btn" [ngClass]="brushMode === 'erase' ? 'btn-primary shadow-sm' : 'btn-outline-secondary text-light'" (click)="onModeChange('erase')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <path d="M7 10l5 5 5-5"></path>
+          <path d="M12 15V3"></path>
+        </svg>
+        Erase
+      </button>
+      <button class="btn" [ngClass]="brushMode === 'restore' ? 'btn-primary shadow-sm' : 'btn-outline-secondary text-light'" (click)="onModeChange('restore')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <path d="M7 10l5-5 5 5"></path>
+          <path d="M12 5v12"></path>
+        </svg>
+        Restore
+      </button>
+    </div>
+
+    <div class="d-flex flex-column gap-2 mb-2">
+      <label class="form-label text-light mb-0 small">Brush Size: {{ brushSize }}px</label>
+      <input type="range" class="form-range" min="5" max="100" [(ngModel)]="brushSize" (ngModelChange)="brushSizeChange.emit($event)">
+    </div>
+
+    <hr class="border-secondary my-1">
+
+    <button class="btn btn-primary btn-lg mt-auto w-100 d-flex align-items-center justify-content-center gap-2 shadow" (click)="download.emit()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      Download Current
+    </button>
+  </div>
+</div>

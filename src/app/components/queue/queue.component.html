@@ -1,0 +1,79 @@
+<div class="card bg-dark text-white border-secondary shadow-sm">
+  <div class="card-header border-secondary d-flex justify-content-between align-items-center py-3">
+    <h3 class="h6 mb-0 text-uppercase fw-bold text-muted">Processing Queue ({{ jobs.length }})</h3>
+    @if (jobs.length > 0) {
+      <button class="btn btn-sm btn-outline-secondary" (click)="clearCompleted.emit()">
+        Clear Completed
+      </button>
+    }
+  </div>
+
+  @if (jobs.length > 0) {
+    <div class="card-body p-0">
+      <div class="list-group list-group-flush rounded-bottom">
+        @for (job of jobs; track job) {
+          <div class="list-group-item bg-dark text-white border-secondary d-flex align-items-center p-3 position-relative">
+            <!-- Thumbnail -->
+            <div class="position-relative me-3" style="width: 50px; height: 50px; flex-shrink: 0;">
+              <img [src]="job.processedUrl || job.originalUrl" alt="Thumbnail" class="w-100 h-100 rounded object-fit-cover">
+              @if (job.status === 'Processing') {
+                <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-50 rounded">
+                  <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                </div>
+              }
+            </div>
+            <!-- Details -->
+            <div class="flex-grow-1 min-w-0 me-3">
+              <div class="text-truncate fw-medium mb-1" [title]="job.originalFile.name">{{ job.originalFile.name }}</div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge"
+                  [ngClass]="{
+                    'bg-warning text-dark': job.status === 'Pending',
+                    'bg-primary': job.status === 'Processing',
+                    'bg-success': job.status === 'Completed',
+                    'bg-danger': job.status === 'Failed'
+                  }">
+                  {{ job.status }}
+                </span>
+                @if (job.error) {
+                  <small class="text-danger text-truncate" [title]="job.error">{{ job.error }}</small>
+                }
+              </div>
+            </div>
+            <!-- Actions -->
+            <div>
+              @if (job.status === 'Failed') {
+                <button class="btn btn-outline-danger btn-sm" (click)="retryJob.emit(job.id)" title="Retry">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="1 4 1 10 7 10"></polyline>
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                  </svg>
+                </button>
+              }
+              @if (job.status === 'Completed') {
+                <button class="btn btn-primary btn-sm" (click)="previewJob.emit(job)" title="Preview">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  Edit
+                </button>
+              }
+            </div>
+            <!-- Progress Bar Overlay (bottom border) -->
+            @if (job.status === 'Processing') {
+              <div class="position-absolute bottom-0 start-0 w-100" style="height: 3px;">
+                <div class="bg-primary h-100" [style.width.%]="job.progress || 0" style="transition: width 0.3s ease;"></div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  } @else {
+    <div class="card-body text-center text-muted py-5">
+      <p class="mb-0">No images in queue. Upload some to begin.</p>
+    </div>
+  }
+
+</div>
