@@ -21,11 +21,40 @@ export class WorkerService {
           this.pendingRequests.delete(id);
         }
       };
+
+      const modelSources = this.resolveModelSources();
+
       // Pre-warm the session loading
-      this.worker.postMessage({ type: 'init' });
+      this.worker.postMessage({ type: 'init', modelSources });
     } else {
       console.error('Web Workers are not supported in this environment.');
     }
+  }
+
+  private resolveModelSources(): string[] {
+    const defaults = ['/assets/models/model_quantized.onnx', '/assets/models/model.onnx'];
+    const unique = new Set<string>(defaults);
+    const globalObject = window as Window & {
+      REMOVEBG_MODEL_URL?: string;
+      REMOVEBG_MODEL_URLS?: string[];
+    };
+
+    if (typeof globalObject.REMOVEBG_MODEL_URL === 'string' && globalObject.REMOVEBG_MODEL_URL.trim()) {
+      unique.add(globalObject.REMOVEBG_MODEL_URL.trim());
+    }
+
+    if (Array.isArray(globalObject.REMOVEBG_MODEL_URLS)) {
+      for (const url of globalObject.REMOVEBG_MODEL_URLS) {
+        if (typeof url === 'string' && url.trim()) unique.add(url.trim());
+      }
+    }
+
+    const localStorageUrl = localStorage.getItem('removebg.modelUrl');
+    if (localStorageUrl && localStorageUrl.trim()) {
+      unique.add(localStorageUrl.trim());
+    }
+
+    return Array.from(unique);
   }
 
   async processImage(id: string, imageData: ImageData, targetSize: number): Promise<Float32Array> {

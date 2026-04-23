@@ -6,17 +6,81 @@ ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.24.3/di
 ort.env.wasm.numThreads = 1;
 
 let session: ort.InferenceSession | null = null;
+let configuredModelSources: string[] = [];
+
+const DEFAULT_MODEL_SOURCES = [
+  '/assets/models/model_quantized.onnx',
+  '/assets/models/model.onnx'
+];
+
+function normalizeModelSources(sources: unknown): string[] {
+  if (!Array.isArray(sources)) return [...DEFAULT_MODEL_SOURCES];
+  const unique = new Set<string>();
+
+  for (const source of sources) {
+    if (typeof source === 'string' && source.trim()) {
+      unique.add(source.trim());
+    }
+  }
+
+  if (unique.size === 0) return [...DEFAULT_MODEL_SOURCES];
+  for (const defaultSource of DEFAULT_MODEL_SOURCES) unique.add(defaultSource);
+  return Array.from(unique);
+}
+
+function inferExternalDataPath(modelPath: string): string {
+  return modelPath.endsWith('.onnx') ? `${modelPath}.data` : `${modelPath}.data`;
+}
+
+async function tryCreateSession(modelPath: string): Promise<ort.InferenceSession> {
+  const baseOptions = { executionProviders: ['wasm'] } as any;
+
+  try {
+    return await ort.InferenceSession.create(modelPath as any, baseOptions);
+  } catch (error: any) {
+    const message = String(error?.message || error || 'unknown');
+    const shouldRetryWithExternalData =
+      message.toLowerCase().includes('external data') || message.toLowerCase().includes('external_data');
+
+    if (!shouldRetryWithExternalData) throw error;
+
+    const externalDataPath = inferExternalDataPath(modelPath);
+    const withExternalData = {
+      ...baseOptions,
+      externalData: [{ path: externalDataPath }]
+    } as any;
+
+    return ort.InferenceSession.create(modelPath as any, withExternalData);
+  }
+}
+
+async function ensureSession(): Promise<ort.InferenceSession> {
+  if (session) return session;
+
+  const modelSources = configuredModelSources.length > 0 ? configuredModelSources : DEFAULT_MODEL_SOURCES;
+  const failures: string[] = [];
+
+  for (const source of modelSources) {
+    try {
+      session = await tryCreateSession(source);
+      return session;
+    } catch (error: any) {
+      failures.push(`${source}: ${String(error?.message || error || 'unknown error')}`);
+    }
+  }
+
+  throw new Error(`Model load failed for all sources. ${failures.join(' | ')}`);
+}
 
 addEventListener('message', async ({ data }) => {
   if (data.type === 'init') {
+    configuredModelSources = normalizeModelSources(data.modelSources);
     if (!session) {
-       try {
-        session = await ort.InferenceSession.create('/assets/models/model_quantized.onnx' as any, {
-          executionProviders: ['wasm']
-        });
-       } catch (e) {
-         console.warn('Pre-warm failed. Might lack network or path is wrong.', e);
-       }
+      try {
+        await ensureSession();
+      } catch (e) {
+        console.warn('Pre-warm failed. Model sources may be unavailable.', e);
+      }
     }
     return;
   }
@@ -24,11 +88,7 @@ addEventListener('message', async ({ data }) => {
   const { id, imageData, targetSize } = data;
 
   try {
-    if (!session) {
-      session = await ort.InferenceSession.create('/assets/models/model_quantized.onnx' as any, {
-        executionProviders: ['wasm']
-      });
-    }
+    session = await ensureSession();
 
     const floatArray = new Float32Array(3 * targetSize * targetSize);
     

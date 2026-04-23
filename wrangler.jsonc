@@ -10,5 +10,11 @@
   },
   "compatibility_flags": [
     "nodejs_compat"
+  ],
+  "routes": [
+    {
+      "pattern": "removebg.lastbench.dev/*",
+      "zone_name": "lastbench.dev"
+    }
   ]
 }
